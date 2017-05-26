@@ -1,4 +1,4 @@
-// The Harness for a Eject program.
+// The Harness for a Egret program.
 //
 // It has a couple responsibilities:
 // 1. Parse the user program, generating a main.go file that registers
@@ -25,11 +25,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-core"
 )
 
 var (
-	watcher    *eject.Watcher
+	watcher    *egret.Watcher
 	doNotWatch = []string{"views"}
 
 	lastRequestHadError int32
@@ -45,8 +45,8 @@ type Harness struct {
 }
 
 func renderError(w http.ResponseWriter, r *http.Request, err error) {
-	req, resp := eject.NewRequest(r), eject.NewResponse(w)
-	c := eject.NewContext(req, resp)
+	req, resp := egret.NewRequest(r), egret.NewResponse(w)
+	c := egret.NewContext(req, resp)
 	c.RenderError(err)
 	c.ExecuteRender()
 }
@@ -83,14 +83,14 @@ func (h *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewHarness() *Harness {
 	// Get a template loader to render errors.
 	// Prefer the app's views/errors directory, and fall back to the stock error pages.
-	// eject.MainTemplateLoader = eject.NewTemplateLoader(
-	// 	[]string{filepath.Join(eject.EjectPath, "views")})
-	// eject.MainTemplateLoader.Refresh()
+	// egret.MainTemplateLoader = egret.NewTemplateLoader(
+	// 	[]string{filepath.Join(egret.EgretPath, "views")})
+	// egret.MainTemplateLoader.Refresh()
 
-	addr := eject.HttpAddr
-	port := eject.Config.GetIntDefault("harness.port", 0)
+	addr := egret.HttpAddr
+	port := egret.Config.GetIntDefault("harness.port", 0)
 	scheme := "http"
-	if eject.HttpTLSEnabled {
+	if egret.HttpTLSEnabled {
 		scheme = "https"
 	}
 
@@ -111,7 +111,7 @@ func NewHarness() *Harness {
 		proxy:      httputil.NewSingleHostReverseProxy(serverURL),
 	}
 
-	if eject.HttpTLSEnabled {
+	if egret.HttpTLSEnabled {
 		harness.proxy.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -119,8 +119,8 @@ func NewHarness() *Harness {
 	return harness
 }
 
-// Refresh method rebuilds the Eject application and run it on the given port.
-func (h *Harness) Refresh() (err *eject.Error) {
+// Refresh method rebuilds the Egret application and run it on the given port.
+func (h *Harness) Refresh() (err *egret.Error) {
 	if h.app != nil {
 		h.app.Kill()
 	}
@@ -133,7 +133,7 @@ func (h *Harness) Refresh() (err *eject.Error) {
 
 	h.app.Port = h.port
 	if err2 := h.app.Cmd().Start(); err2 != nil {
-		return &eject.Error{
+		return &egret.Error{
 			Title:       "App failed to start up",
 			Description: err2.Error(),
 		}
@@ -145,7 +145,7 @@ func (h *Harness) Refresh() (err *eject.Error) {
 // WatchDir method returns false to file matches with doNotWatch
 // otheriwse true
 func (h *Harness) WatchDir(info os.FileInfo) bool {
-	return !eject.ContainsString(doNotWatch, info.Name())
+	return !egret.ContainsString(doNotWatch, info.Name())
 }
 
 // WatchFile method returns true given filename HasSuffix of ".go"
@@ -158,21 +158,21 @@ func (h *Harness) WatchFile(filename string) bool {
 // server, which it runs and rebuilds as necessary.
 func (h *Harness) Run() {
 	var paths []string
-	if eject.Config.GetBoolDefault("watch.gopath", false) {
+	if egret.Config.GetBoolDefault("watch.gopath", false) {
 		gopaths := filepath.SplitList(build.Default.GOPATH)
 		paths = append(paths, gopaths...)
 	}
-	paths = append(paths, eject.CodePaths...)
-	watcher = eject.NewWatcher()
+	paths = append(paths, egret.CodePaths...)
+	watcher = egret.NewWatcher()
 	watcher.Listen(h, paths...)
 
 	go func() {
-		addr := fmt.Sprintf("%s:%d", eject.HttpAddr, eject.HttpPort)
+		addr := fmt.Sprintf("%s:%d", egret.HttpAddr, egret.HttpPort)
 		logrus.Info("Listening on address: " + addr)
 
 		var err error
-		if eject.HttpTLSEnabled {
-			err = http.ListenAndServeTLS(addr, eject.HttpTLSCert, eject.HttpTLSKey, h)
+		if egret.HttpTLSEnabled {
+			err = http.ListenAndServeTLS(addr, egret.HttpTLSCert, egret.HttpTLSKey, h)
 		} else {
 			err = http.ListenAndServe(addr, h)
 		}
@@ -219,7 +219,7 @@ func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
 		d   net.Conn
 		err error
 	)
-	if eject.HttpTLSEnabled {
+	if egret.HttpTLSEnabled {
 		// since this proxy isn't used in production,
 		// it's OK to set InsecureSkipVerify to true
 		// no need to add another configuration option.

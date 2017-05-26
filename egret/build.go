@@ -6,15 +6,15 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/kenorld/eject-cmd/harness"
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-cmd/harness"
+	"github.com/kenorld/egret-core"
 )
 
 var cmdBuild = &Command{
 	UsageLine: "build [import path] [target path] [run mode]",
-	Short:     "build a Eject application (e.g. for deployment)",
+	Short:     "build a Egret application (e.g. for deployment)",
 	Long: `
-Build the Eject web application named by the given import path.
+Build the Egret web application named by the given import path.
 This allows it to be deployed and run on a machine that lacks a Go installation.
 
 The run mode is used to select which set of app.yaml configuration should
@@ -26,7 +26,7 @@ WARNING: The target path will be completely deleted, if it already exists!
 
 For example:
 
-    eject build github.com/kenorld/eject-samples/chat /tmp/chat
+    egret build github.com/kenorld/egret-samples/chat /tmp/chat
 `,
 }
 
@@ -45,8 +45,8 @@ func buildApp(args []string) {
 		mode = args[2]
 	}
 
-	if !eject.Initialized {
-		eject.Init(mode, appImportPath, "")
+	if !egret.Initialized {
+		egret.Init(mode, appImportPath, "")
 	}
 
 	// First, verify that it is either already empty or looks like a previous
@@ -64,18 +64,18 @@ func buildApp(args []string) {
 	// Included are:
 	// - run scripts
 	// - binary
-	// - eject
+	// - egret
 	// - app
 
-	// Eject and the app are in a directory structure mirroring import path
+	// Egret and the app are in a directory structure mirroring import path
 	srcPath := path.Join(destPath, "src")
 	destBinaryPath := path.Join(destPath, filepath.Base(app.BinaryPath))
-	tmpEjectPath := path.Join(srcPath, filepath.FromSlash(eject.EjectCoreImportPath))
+	tmpEgretPath := path.Join(srcPath, filepath.FromSlash(egret.EgretCoreImportPath))
 	mustCopyFile(destBinaryPath, app.BinaryPath)
 	mustChmod(destBinaryPath, 0755)
-	mustCopyDir(path.Join(tmpEjectPath, "conf"), path.Join(eject.EjectPath, "conf"), nil)
-	mustCopyDir(path.Join(tmpEjectPath, "views"), path.Join(eject.EjectPath, "views"), nil)
-	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), eject.BasePath, nil)
+	mustCopyDir(path.Join(tmpEgretPath, "conf"), path.Join(egret.EgretPath, "conf"), nil)
+	mustCopyDir(path.Join(tmpEgretPath, "views"), path.Join(egret.EgretPath, "views"), nil)
+	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), egret.BasePath, nil)
 
 	tmplData, runShPath := map[string]interface{}{
 		"BinName":    filepath.Base(app.BinaryPath),
@@ -85,13 +85,13 @@ func buildApp(args []string) {
 
 	mustRenderTemplate(
 		runShPath,
-		filepath.Join(eject.EjectPath, "..", "cmd", "eject", "package_run.sh.template"),
+		filepath.Join(egret.EgretPath, "..", "cmd", "egret", "package_run.sh.template"),
 		tmplData)
 
 	mustChmod(runShPath, 0755)
 
 	mustRenderTemplate(
 		filepath.Join(destPath, "run.bat"),
-		filepath.Join(eject.EjectPath, "..", "cmd", "eject", "package_run.bat.template"),
+		filepath.Join(egret.EgretPath, "..", "cmd", "egret", "package_run.bat.template"),
 		tmplData)
 }

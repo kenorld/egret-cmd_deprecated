@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-core"
 )
 
 // App contains the configuration for running a Revel app.  (Not for the app itself)
@@ -37,7 +37,7 @@ func (a *App) Kill() {
 }
 
 // AppCmd manages the running of a Revel app server.
-// It requires eject.Init to have been called previously.
+// It requires egret.Init to have been called previously.
 type AppCmd struct {
 	*exec.Cmd
 }
@@ -45,8 +45,8 @@ type AppCmd struct {
 func NewAppCmd(binPath string, port int) AppCmd {
 	cmd := exec.Command(binPath,
 		fmt.Sprintf("-port=%d", port),
-		fmt.Sprintf("-importPath=%s", eject.ImportPath),
-		fmt.Sprintf("-runMode=%s", eject.RunMode))
+		fmt.Sprintf("-importPath=%s", egret.ImportPath),
+		fmt.Sprintf("-runMode=%s", egret.RunMode))
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return AppCmd{cmd}
 }
@@ -67,13 +67,13 @@ func (cmd AppCmd) Start() error {
 
 	select {
 	case <-cmd.waitChan():
-		logrus.Error("eject/harness: app died")
-		return errors.New("eject/harness: app died")
+		logrus.Error("egret/harness: app died")
+		return errors.New("egret/harness: app died")
 
 	case <-time.After(30 * time.Second):
 		cmd.Kill()
-		logrus.Error("eject/harness: app timed out")
-		return errors.New("eject/harness: app timed out")
+		logrus.Error("egret/harness: app timed out")
+		return errors.New("egret/harness: app timed out")
 
 	case <-listeningWriter.notifyReady:
 		return nil
@@ -97,12 +97,12 @@ func (cmd AppCmd) Run() {
 // Terminate the app server if it's running.
 func (cmd AppCmd) Kill() {
 	if cmd.Cmd != nil && (cmd.ProcessState == nil || !cmd.ProcessState.Exited()) {
-		logrus.Info("Killing eject server pid: ", cmd.Process.Pid)
+		logrus.Info("Killing egret server pid: ", cmd.Process.Pid)
 		err := cmd.Process.Kill()
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"error": err,
-			}).Error("Failed to kill eject server.")
+			}).Error("Failed to kill egret server.")
 		}
 	}
 }
@@ -118,7 +118,7 @@ func (cmd AppCmd) waitChan() <-chan struct{} {
 }
 
 // A io.Writer that copies to the destination, and listens for "Listening on.."
-// in the stream.  (Which tells us when the eject server has finished starting up)
+// in the stream.  (Which tells us when the egret server has finished starting up)
 // This is super ghetto, but by far the simplest thing that should work.
 type startupListeningWriter struct {
 	dest        io.Writer

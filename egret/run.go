@@ -3,20 +3,20 @@ package main
 import (
 	"strconv"
 
-	"github.com/kenorld/eject-cmd/harness"
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-cmd/harness"
+	"github.com/kenorld/egret-core"
 	"github.com/Sirupsen/logrus"
 )
 
 var cmdRun = &Command{
 	UsageLine: "run [import path] [run mode] [port]",
-	Short:     "run a Eject application",
+	Short:     "run a Egret application",
 	Long: `
-Run the Eject web application named by the given import path.
+Run the Egret web application named by the given import path.
 
 For example, to run the chat room sample application:
 
-    eject run github.com/kenorld/eject-samples/chat dev
+    egret run github.com/kenorld/egret-samples/chat dev
 
 The run mode is used to select which set of app.yaml configuration should
 apply and may be used to determine logic in the application itself.
@@ -25,7 +25,7 @@ Run mode defaults to "dev".
 
 You can set a port as an optional third parameter.  For example:
 
-    eject run github.com/kenorld/eject-samples/chat prod 8080`,
+    egret run github.com/kenorld/egret-samples/chat prod 8080`,
 }
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 
 func runApp(args []string) {
 	if len(args) == 0 {
-		errorf("No import path given.\nRun 'eject help run' for usage.\n")
+		errorf("No import path given.\nRun 'egret help run' for usage.\n")
 	}
 
 	// Determine the run mode.
@@ -44,11 +44,11 @@ func runApp(args []string) {
 	}
 
 	// Find and parse app.yaml
-	eject.Init(mode, args[0], "")
-	eject.LoadMimeConfig()
+	egret.Init(mode, args[0], "")
+	egret.LoadMimeConfig()
 
 	// Determine the override port, if any.
-	port := eject.HttpPort
+	port := egret.HttpPort
 	if len(args) == 3 {
 		var err error
 		if port, err = strconv.Atoi(args[2]); err != nil {
@@ -57,13 +57,13 @@ func runApp(args []string) {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"AppName": eject.AppName, "ImportPath": eject.ImportPath, "Mode": mode, "BasePath": eject.BasePath,
+		"AppName": egret.AppName, "ImportPath": egret.ImportPath, "Mode": mode, "BasePath": egret.BasePath,
 	}).Info("Running...")
 
 	// If the app is run in "watched" mode, use the harness to run it.
-	if eject.Config.GetBoolDefault("watch.enabled", true) && eject.Config.GetBoolDefault("watch.code", true) {
+	if egret.Config.GetBoolDefault("watch.enabled", true) && egret.Config.GetBoolDefault("watch.code", true) {
 		logrus.Info("Running in watched mode.")
-		eject.HttpPort = port
+		egret.HttpPort = port
 		harness.NewHarness().Run() // Never returns.
 	}
 

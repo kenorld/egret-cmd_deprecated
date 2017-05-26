@@ -11,14 +11,14 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-core"
 )
 
 // Use a wrapper to differentiate logged panics from unexpected ones.
 type LoggedError struct{ error }
 
 func panicOnError(err error, msg string) {
-	if revErr, ok := err.(*eject.Error); (ok && revErr != nil) || (!ok && err != nil) {
+	if revErr, ok := err.(*egret.Error); (ok && revErr != nil) || (!ok && err != nil) {
 		fmt.Fprintf(os.Stderr, "Abort: %s: %s\n", msg, err)
 		panic(LoggedError{err})
 	}
@@ -66,7 +66,7 @@ func mustChmod(filename string, mode os.FileMode) {
 // Additionally, the trailing ".template" is stripped from the file name.
 // Also, dot files and dot directories are skipped.
 func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
-	return eject.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+	return egret.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		// Get the relative path from the source base, and the corresponding path in
 		// the dest directory.
 		relSrcPath := strings.TrimLeft(srcPath[len(srcDir):], string(os.PathSeparator))
@@ -112,7 +112,7 @@ func mustTarGzDir(destFilename, srcDir string) string {
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
-	eject.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+	egret.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}

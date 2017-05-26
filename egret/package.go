@@ -6,14 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-core"
 )
 
 var cmdPackage = &Command{
 	UsageLine: "package [import path] [run mode]",
-	Short:     "package a Eject application (e.g. for deployment)",
+	Short:     "package a Egret application (e.g. for deployment)",
 	Long: `
-Package the Eject web application named by the given import path.
+Package the Egret web application named by the given import path.
 This allows it to be deployed and run on a machine that lacks a Go installation.
 
 The run mode is used to select which set of app.yaml configuration should
@@ -23,7 +23,7 @@ Run mode defaults to "dev".
 
 For example:
 
-    eject package github.com/kenorld/eject-samples/chat
+    egret package github.com/kenorld/egret-samples/chat
 `,
 }
 
@@ -44,14 +44,14 @@ func packageApp(args []string) {
 	}
 
 	appImportPath := args[0]
-	eject.Init(mode, appImportPath, "")
+	egret.Init(mode, appImportPath, "")
 
 	// Remove the archive if it already exists.
-	destFile := filepath.Base(eject.BasePath) + ".tar.gz"
+	destFile := filepath.Base(egret.BasePath) + ".tar.gz"
 	os.Remove(destFile)
 
 	// Collect stuff in a temp directory.
-	tmpDir, err := ioutil.TempDir("", filepath.Base(eject.BasePath))
+	tmpDir, err := ioutil.TempDir("", filepath.Base(egret.BasePath))
 	panicOnError(err, "Failed to get temp dir")
 
 	buildApp([]string{args[0], tmpDir, mode})

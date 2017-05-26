@@ -11,19 +11,19 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/kenorld/eject-cmd/harness"
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-cmd/harness"
+	"github.com/kenorld/egret-core"
 )
 
 var cmdTest = &Command{
 	UsageLine: "test [import path] [run mode] [suite.method]",
 	Short:     "run all tests from the command-line",
 	Long: `
-Run all tests for the Eject app named by the given import path.
+Run all tests for the Egret app named by the given import path.
 
 For example, to run the booking sample application's tests:
 
-    eject test github.com/kenorld/eject-samples/booking dev
+    egret test github.com/kenorld/egret-samples/booking dev
 
 The run mode is used to select which set of app.yaml configuration should
 apply and may be used to determine logic in the application itself.
@@ -33,11 +33,11 @@ Run mode defaults to "dev".
 You can run a specific suite (and function) by specifying a third parameter.
 For example, to run all of UserTest:
 
-    eject test outspoken test UserTest
+    egret test outspoken test UserTest
 
 or one of UserTest's methods:
 
-    eject test outspoken test UserTest.Test1
+    egret test outspoken test UserTest.Test1
 `,
 }
 
@@ -48,7 +48,7 @@ func init() {
 func testApp(args []string) {
 	var err error
 	if len(args) == 0 {
-		errorf("No import path given.\nRun 'eject help test' for usage.\n")
+		errorf("No import path given.\nRun 'egret help test' for usage.\n")
 	}
 
 	mode := "dev"
@@ -57,12 +57,12 @@ func testApp(args []string) {
 	}
 
 	// Find and parse app.yaml
-	eject.Init(mode, args[0], "")
+	egret.Init(mode, args[0], "")
 
 	// Ensure that the testrunner is loaded in this mode.
 	// 	testRunnerFound := false
-	// 	for _, module := range eject.Modules {
-	// 		if module.ImportPath == eject.Config.StringDefault("module.testrunner", "github.com/kenorld/eject-extra/modules/testrunner") {
+	// 	for _, module := range egret.Modules {
+	// 		if module.ImportPath == egret.Config.StringDefault("module.testrunner", "github.com/kenorld/egret-extra/modules/testrunner") {
 	// 			testRunnerFound = true
 	// 			break
 	// 		}
@@ -72,13 +72,13 @@ func testApp(args []string) {
 
 	// You can add it to a run mode configuration with the following line:
 
-	// 	module.testrunner = github.com/kenorld/eject-extra/modules/testrunner
+	// 	module.testrunner = github.com/kenorld/egret-extra/modules/testrunner
 
 	// `)
 	// 	}
 
 	// Create a directory to hold the test result files.
-	resultPath := path.Join(eject.BasePath, "test-results")
+	resultPath := path.Join(egret.BasePath, "test-results")
 	if err = os.RemoveAll(resultPath); err != nil {
 		errorf("Failed to remove test result directory %s: %s", resultPath, err)
 	}
@@ -106,7 +106,7 @@ func testApp(args []string) {
 	}
 	defer cmd.Kill()
 	logrus.WithFields(logrus.Fields{
-		"AppName": eject.AppName, "ImportPath": eject.ImportPath, "Mode": mode,
+		"AppName": egret.AppName, "ImportPath": egret.ImportPath, "Mode": mode,
 	}).Info("Testing...")
 
 	// Get a list of tests.
@@ -115,7 +115,7 @@ func testApp(args []string) {
 	var (
 		// testSuites []routes.TestSuiteDesc
 		resp    *http.Response
-		baseUrl = fmt.Sprintf("http://127.0.0.1:%d", eject.HttpPort)
+		baseUrl = fmt.Sprintf("http://127.0.0.1:%d", egret.HttpPort)
 	)
 	for i := 0; ; i++ {
 		if resp, err = http.Get(baseUrl + "/@tests.list"); err == nil {
@@ -144,8 +144,8 @@ func testApp(args []string) {
 	// fmt.Println()
 
 	// Load the result template, which we execute for each suite.
-	// module, _ := eject.ModuleByName("testrunner")
-	// TemplateLoader := eject.NewTemplateLoader([]string{path.Join(module.Path, "core", "views")})
+	// module, _ := egret.ModuleByName("testrunner")
+	// TemplateLoader := egret.NewTemplateLoader([]string{path.Join(module.Path, "core", "views")})
 	// if err := TemplateLoader.Refresh(); err != nil {
 	// 	errorf("Failed to compile templates: %s", err)
 	// }

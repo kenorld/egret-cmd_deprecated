@@ -14,14 +14,14 @@ import (
 )
 
 const (
-	ejectExtraImportPath = "github.com/kenorld/eject-extra"
+	egretExtraImportPath = "github.com/kenorld/egret-extra"
 )
 
 var cmdNew = &Command{
 	UsageLine: "new [path] [skeleton]",
-	Short:     "create a skeleton Eject application",
+	Short:     "create a skeleton Egret application",
 	Long: `
-New creates a few files to get a new Eject application running quickly.
+New creates a few files to get a new Egret application running quickly.
 
 It puts all of the files in the given import path, taking the final element in
 the path to be the app name.
@@ -30,9 +30,9 @@ Skeleton is an optional argument, provided as an import path
 
 For example:
 
-    eject new import/path/helloworld
+    egret new import/path/helloworld
 
-    eject new import/path/helloworld import/path/skeleton
+    egret new import/path/helloworld import/path/skeleton
 `,
 }
 
@@ -47,8 +47,8 @@ var (
 	gocmd   string
 	srcRoot string
 
-	// eject related paths
-	ejectExtraPkg *build.Package
+	// egret related paths
+	egretExtraPkg *build.Package
 	appPath       string
 	appName       string
 	basePath      string
@@ -59,10 +59,10 @@ var (
 func newApp(args []string) {
 	// check for proper args by count
 	if len(args) == 0 {
-		errorf("No import path given.\nRun 'eject help new' for usage.\n")
+		errorf("No import path given.\nRun 'egret help new' for usage.\n")
 	}
 	if len(args) > 2 {
-		errorf("Too many arguments provided.\nRun 'eject help new' for usage.\n")
+		errorf("Too many arguments provided.\nRun 'egret help new' for usage.\n")
 	}
 
 	// checking and setting go paths
@@ -79,7 +79,7 @@ func newApp(args []string) {
 
 	// goodbye world
 	fmt.Fprintln(os.Stdout, "Your application is ready:\n  ", appPath)
-	fmt.Fprintln(os.Stdout, "\nYou can run it with:\n   eject run", importPath)
+	fmt.Fprintln(os.Stdout, "\nYou can run it with:\n   egret run", importPath)
 }
 
 const alphaNumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -108,7 +108,7 @@ func initGoPaths() {
 		errorf("Go executable not found in PATH.")
 	}
 
-	// eject/eject#1004 choose go path relative to current working directory
+	// egret/egret#1004 choose go path relative to current working directory
 	workingDir, _ := os.Getwd()
 	goPathList := filepath.SplitList(gopath)
 	for _, path := range goPathList {
@@ -125,7 +125,7 @@ func initGoPaths() {
 	}
 
 	if len(srcRoot) == 0 {
-		log.Fatal("Abort: could not create a Eject application outside of GOPATH.")
+		log.Fatal("Abort: could not create a Egret application outside of GOPATH.")
 	}
 
 	// set go src path
@@ -136,7 +136,7 @@ func setApplicationPath(args []string) {
 	var err error
 	importPath = args[0]
 
-	// eject/eject#1014 validate relative path, we cannot use built-in functions
+	// egret/egret#1014 validate relative path, we cannot use built-in functions
 	// since Go import path is valid relative path too.
 	// so check basic part of the path, which is "."
 	if filepath.IsAbs(importPath) || strings.HasPrefix(importPath, ".") {
@@ -149,9 +149,9 @@ func setApplicationPath(args []string) {
 		errorf("Abort: Import path %s already exists.\n", importPath)
 	}
 
-	ejectExtraPkg, err = build.Import(ejectExtraImportPath, "", build.FindOnly)
+	egretExtraPkg, err = build.Import(egretExtraImportPath, "", build.FindOnly)
 	if err != nil {
-		errorf("Abort: Could not find Eject source code: %s\n", err)
+		errorf("Abort: Could not find Egret source code: %s\n", err)
 	}
 
 	appPath = filepath.Join(srcRoot, filepath.FromSlash(importPath))
@@ -164,7 +164,7 @@ func setApplicationPath(args []string) {
 		basePath = ""
 	} else {
 		// we need to append a '/' when the app is
-		// is a subdirectory such as $GOROOT/src/path/to/ejectapp
+		// is a subdirectory such as $GOROOT/src/path/to/egretapp
 		basePath += "/"
 	}
 }
@@ -190,8 +190,8 @@ func setSkeletonPath(args []string) {
 		skeletonPath = filepath.Join(srcRoot, skeletonName)
 
 	} else {
-		// use the eject default
-		skeletonPath = filepath.Join(ejectExtraPkg.Dir, "skeletons/default")
+		// use the egret default
+		skeletonPath = filepath.Join(egretExtraPkg.Dir, "skeletons/default")
 	}
 }
 

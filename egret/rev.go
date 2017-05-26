@@ -1,4 +1,4 @@
-// The command line tool for running Eject apps.
+// The command line tool for running Egret apps.
 package main
 
 import (
@@ -81,7 +81,7 @@ func main() {
 		}
 	}
 
-	errorf("unknown command %q\nRun 'eject help' for usage.\n", args[0])
+	errorf("unknown command %q\nRun 'egret help' for usage.\n", args[0])
 }
 
 func errorf(format string, args ...interface{}) {
@@ -93,7 +93,7 @@ func errorf(format string, args ...interface{}) {
 	panic(LoggedError{}) // Panic instead of os.Exit so that deferred will run.
 }
 
-//http://patorjk.com/software/taag/#p=testall&h=1&c=c&f=Graffiti&t=Eject
+//http://patorjk.com/software/taag/#p=testall&h=1&c=c&f=Graffiti&t=Egret
 const header = `
     ███████╗     ██╗███████╗ ██████╗████████╗
     ██╔════╝     ██║██╔════╝██╔════╝╚══██╔══╝
@@ -103,16 +103,16 @@ const header = `
     ╚══════╝ ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   
 `
 
-const usageTemplate = `usage: eject command [arguments]
+const usageTemplate = `usage: egret command [arguments]
 
 The commands are:
 {{range .}}
     {{.Name | printf "%-11s"}} {{.Short}}{{end}}
 
-Use "eject help [command]" for more information.
+Use "egret help [command]" for more information.
 `
 
-var helpTemplate = `usage: eject {{.UsageLine}}
+var helpTemplate = `usage: egret {{.UsageLine}}
 {{.Long}}
 `
 

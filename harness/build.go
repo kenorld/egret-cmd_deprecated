@@ -14,7 +14,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/kenorld/eject-core"
+	"github.com/kenorld/egret-core"
 )
 
 var importErrorPattern = regexp.MustCompile("cannot find package \"([^\"]+)\"")
@@ -22,15 +22,15 @@ var importErrorPattern = regexp.MustCompile("cannot find package \"([^\"]+)\"")
 // Build the app:
 // 1. Generate the the main.go file.
 // 2. Run the appropriate "go build" command.
-// Requires that eject.Init has been called previously.
+// Requires that egret.Init has been called previously.
 // Returns the path to the built binary, and an error if there was a problem building it.
-func Build(buildFlags ...string) (app *App, compileError *eject.Error) {
+func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 	if compileError != nil {
 		return nil, compileError
 	}
 
 	// Read build config.
-	buildTags := eject.Config.GetStringDefault("build.tags", "")
+	buildTags := egret.Config.GetStringDefault("build.tags", "")
 
 	// Build the user program (all code under app).
 	// It relies on the user having "go" installed.
@@ -39,15 +39,15 @@ func Build(buildFlags ...string) (app *App, compileError *eject.Error) {
 		logrus.Fatal("Go executable not found in PATH.")
 	}
 
-	pkg, err := build.Default.Import(eject.ImportPath, "", build.FindOnly)
+	pkg, err := build.Default.Import(egret.ImportPath, "", build.FindOnly)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"ImportPath": eject.ImportPath,
+			"ImportPath": egret.ImportPath,
 		}).Fatal("Failure importing.")
 	}
 
-	// Binary path is a combination of $GOBIN/eject.d directory, app's import path and its name.
-	binName := filepath.Join(pkg.BinDir, "eject.d", eject.ImportPath, filepath.Base(eject.BasePath))
+	// Binary path is a combination of $GOBIN/egret.d directory, app's import path and its name.
+	binName := filepath.Join(pkg.BinDir, "egret.d", egret.ImportPath, filepath.Base(egret.BasePath))
 
 	// Change binary path for Windows build
 	goos := runtime.GOOS
@@ -61,12 +61,12 @@ func Build(buildFlags ...string) (app *App, compileError *eject.Error) {
 	gotten := make(map[string]struct{})
 	for {
 		appVersion := getAppVersion()
-		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION=%s", eject.ImportPath, appVersion)
+		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION=%s", egret.ImportPath, appVersion)
 
-		// TODO remove version check for versionLinkerFlags after Eject becomes Go min version to go1.5
+		// TODO remove version check for versionLinkerFlags after Egret becomes Go min version to go1.5
 		goVersion, _ := strconv.ParseFloat(runtime.Version()[2:5], 64)
 		if goVersion < 1.5 {
-			versionLinkerFlags = fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", eject.ImportPath, appVersion)
+			versionLinkerFlags = fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", egret.ImportPath, appVersion)
 		}
 		flags := []string{
 			"build",
@@ -79,7 +79,7 @@ func Build(buildFlags ...string) (app *App, compileError *eject.Error) {
 		flags = append(flags, buildFlags...)
 
 		// The main path
-		flags = append(flags, path.Join(eject.ImportPath))
+		flags = append(flags, path.Join(egret.ImportPath))
 
 		buildCmd := exec.Command(goPath, flags...)
 		logrus.Info("Exec:", buildCmd.Args)
@@ -133,7 +133,7 @@ func getAppVersion() string {
 	// Check for the git binary
 	if gitPath, err := exec.LookPath("git"); err == nil {
 		// Check for the .git directory
-		gitDir := path.Join(eject.BasePath, ".git")
+		gitDir := path.Join(egret.BasePath, ".git")
 		info, err := os.Stat(gitDir)
 		if (err != nil && os.IsNotExist(err)) || !info.IsDir() {
 			return ""
@@ -166,7 +166,7 @@ func containsValue(m map[string]string, val string) bool {
 
 // Parse the output of the "go build" command.
 // Return a detailed Error.
-func newCompileError(output []byte) *eject.Error {
+func newCompileError(output []byte) *egret.Error {
 	errorMatch := regexp.MustCompile(`(?m)^([^:#]+):(\d+):(\d+:)? (.*)$`).
 		FindSubmatch(output)
 	if errorMatch == nil {
@@ -176,7 +176,7 @@ func newCompileError(output []byte) *eject.Error {
 			logrus.WithFields(logrus.Fields{
 				"error": string(output),
 			}).Error("Failed to parse build errors.")
-			return &eject.Error{
+			return &egret.Error{
 				Status:      500,
 				SourceType:  "Go code",
 				Title:       "Go Compilation Error",
@@ -193,11 +193,11 @@ func newCompileError(output []byte) *eject.Error {
 
 	// Read the source for the offending file.
 	var (
-		relFilename    = string(errorMatch[1]) // e.g. "src/eject/sample/core/routes/app.go"
+		relFilename    = string(errorMatch[1]) // e.g. "src/egret/sample/core/routes/app.go"
 		absFilename, _ = filepath.Abs(relFilename)
 		line, _        = strconv.Atoi(string(errorMatch[2]))
 		description    = string(errorMatch[4])
-		compileError   = &eject.Error{
+		compileError   = &egret.Error{
 			SourceType:  "Go code",
 			Title:       "Go Compilation Error",
 			Path:        relFilename,
@@ -206,13 +206,13 @@ func newCompileError(output []byte) *eject.Error {
 		}
 	)
 
-	errorLink := eject.Config.GetStringDefault("error.link", "")
+	errorLink := egret.Config.GetStringDefault("error.link", "")
 
 	if errorLink != "" {
 		compileError.SetLink(errorLink)
 	}
 
-	fileStr, err := eject.ReadLines(absFilename)
+	fileStr, err := egret.ReadLines(absFilename)
 	if err != nil {
 		compileError.MetaError = absFilename + ": " + err.Error()
 		logrus.WithFields(logrus.Fields{
