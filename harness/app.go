@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/kenorld/eject-core"
 )
 
 // App contains the configuration for running a Revel app.  (Not for the app itself)
