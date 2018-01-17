@@ -134,8 +134,9 @@ func (h *Harness) Refresh() (err *egret.Error) {
 	h.app.Port = h.port
 	if err2 := h.app.Cmd().Start(); err2 != nil {
 		return &egret.Error{
-			Title:       "App failed to start up",
-			Description: err2.Error(),
+			Name:    "failed_start_up",
+			Title:   "App failed to start up",
+			Summary: err2.Error(),
 		}
 	}
 

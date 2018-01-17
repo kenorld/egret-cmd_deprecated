@@ -177,10 +177,11 @@ func newCompileError(output []byte) *egret.Error {
 				"error": string(output),
 			}).Error("Failed to parse build errors.")
 			return &egret.Error{
-				Status:      500,
-				SourceType:  "Go code",
-				Title:       "Go Compilation Error",
-				Description: "See console for build error.",
+				Status:     500,
+				Name:       "compilation_error",
+				SourceType: "Go code",
+				Title:      "Go Compilation Error",
+				Summary:    "See console for build error.",
 			}
 		}
 
@@ -196,13 +197,14 @@ func newCompileError(output []byte) *egret.Error {
 		relFilename    = string(errorMatch[1]) // e.g. "src/egret/sample/core/routes/app.go"
 		absFilename, _ = filepath.Abs(relFilename)
 		line, _        = strconv.Atoi(string(errorMatch[2]))
-		description    = string(errorMatch[4])
+		summary        = string(errorMatch[4])
 		compileError   = &egret.Error{
-			SourceType:  "Go code",
-			Title:       "Go Compilation Error",
-			Path:        relFilename,
-			Description: description,
-			Line:        line,
+			SourceType: "Go code",
+			Name:       "compilation_error",
+			Title:      "Go Compilation Error",
+			Path:       relFilename,
+			Summary:    summary,
+			Line:       line,
 		}
 	)
 
