@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 
@@ -61,13 +62,10 @@ func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 	gotten := make(map[string]struct{})
 	for {
 		appVersion := getAppVersion()
-		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION=%s", egret.ImportPath, appVersion)
+		buildTime := time.Now().UTC().Format(time.RFC3339)
+		versionLinkerFlags := fmt.Sprintf("-X %s/app.AppVersion=%s -X %s/app.BuildTime=%s",
+			egret.ImportPath, appVersion, egret.ImportPath, buildTime)
 
-		// TODO remove version check for versionLinkerFlags after Egret becomes Go min version to go1.5
-		goVersion, _ := strconv.ParseFloat(runtime.Version()[2:5], 64)
-		if goVersion < 1.5 {
-			versionLinkerFlags = fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", egret.ImportPath, appVersion)
-		}
 		flags := []string{
 			"build",
 			"-i",
