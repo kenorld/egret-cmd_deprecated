@@ -56,6 +56,8 @@ func buildApp(args []string) {
 	}
 
 	os.RemoveAll(destPath)
+	srcPath := path.Join(destPath, "src")
+	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), egret.BasePath, nil)
 	os.MkdirAll(destPath, 0777)
 
 	app, eerr := harness.Build()
@@ -68,14 +70,12 @@ func buildApp(args []string) {
 	// - app
 
 	// Egret and the app are in a directory structure mirroring import path
-	srcPath := path.Join(destPath, "src")
 	destBinaryPath := path.Join(destPath, filepath.Base(app.BinaryPath))
 	tmpEgretPath := path.Join(srcPath, filepath.FromSlash(egret.EgretCoreImportPath))
 	mustCopyFile(destBinaryPath, app.BinaryPath)
 	mustChmod(destBinaryPath, 0755)
 	mustCopyDir(path.Join(tmpEgretPath, "conf"), path.Join(egret.EgretPath, "conf"), nil)
 	mustCopyDir(path.Join(tmpEgretPath, "views"), path.Join(egret.EgretPath, "views"), nil)
-	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), egret.BasePath, nil)
 
 	tmplData, runShPath := map[string]interface{}{
 		"BinName":    filepath.Base(app.BinaryPath),
@@ -85,13 +85,13 @@ func buildApp(args []string) {
 
 	mustRenderTemplate(
 		runShPath,
-		filepath.Join(egret.EgretPath, "..", "cmd", "egret", "package_run.sh.template"),
+		filepath.Join(egret.EgretPath, "..", "egret-cmd", "egret", "package_run.sh.template"),
 		tmplData)
 
 	mustChmod(runShPath, 0755)
 
 	mustRenderTemplate(
 		filepath.Join(destPath, "run.bat"),
-		filepath.Join(egret.EgretPath, "..", "cmd", "egret", "package_run.bat.template"),
+		filepath.Join(egret.EgretPath, "..", "egret-cmd", "egret", "package_run.bat.template"),
 		tmplData)
 }
