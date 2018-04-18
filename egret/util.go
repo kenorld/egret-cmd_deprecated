@@ -65,7 +65,7 @@ func mustChmod(filename string, mode os.FileMode) {
 // ".template" are treated as a Go template and rendered using the given data.
 // Additionally, the trailing ".template" is stripped from the file name.
 // Also, dot files and dot directories are skipped.
-func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
+func mustCopyDir(destDir, srcDir string, skipGoFile bool, data map[string]interface{}) error {
 	return egret.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		// Get the relative path from the source base, and the corresponding path in
 		// the dest directory.
@@ -92,11 +92,9 @@ func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
 		// If this file ends in ".template", render it as a template.
 		if strings.HasSuffix(relSrcPath, ".template") {
 			mustRenderTemplate(destPath[:len(destPath)-len(".template")], srcPath, data)
-			return nil
+		} else if !skipGoFile || (skipGoFile && strings.HasSuffix(srcPath, ".go")) {
+			mustCopyFile(destPath, srcPath)
 		}
-
-		// Else, just copy it over.
-		mustCopyFile(destPath, srcPath)
 		return nil
 	})
 }
