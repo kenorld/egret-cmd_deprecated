@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/kenorld/egret-core"
 )
 

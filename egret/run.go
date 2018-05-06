@@ -5,7 +5,7 @@ import (
 
 	"github.com/kenorld/egret-cmd/harness"
 	"github.com/kenorld/egret-core"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var cmdRun = &Command{
