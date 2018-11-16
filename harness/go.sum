@@ -1,7 +1,5 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/agtorre/gocolorize v1.0.0 h1:TvGQd+fAqWQlDjQxSKe//Y6RaxK+RHpEU9X/zPmHW50=
-github.com/agtorre/gocolorize v1.0.0/go.mod h1:cH6imfTkHVBRJhSOeSeEZhB4zqEYSq0sXuIyehgZMIY=
 github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -20,8 +18,6 @@ github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
 github.com/imdario/mergo v0.3.6 h1:xTNEAn+kxVO7dTZGu0CegyqKZmoWFI0rF8UxjlB2d28=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
-github.com/kenorld/egret-cmd v0.0.0-20180506080048-cfdd66fd6904 h1:fdcu/b4Rodr67fCMqNq0j5qqauazLhM5AYiqpB2QeRw=
-github.com/kenorld/egret-cmd v0.0.0-20180506080048-cfdd66fd6904/go.mod h1:Peo37qHhnsYl8A2mZzJJrb6vFHYEPdBbBLC/opJe9AE=
 github.com/kenorld/egret-conf v0.0.0-20170311080023-5358f640da69 h1:b9/h4kTrN3WeXJf5OVzYCkBn7ja4GYK/cU+NRVDhSi0=
 github.com/kenorld/egret-conf v0.0.0-20170311080023-5358f640da69/go.mod h1:Tlw87LJ9JdBNKBZJgzZ83m07YTa5x9Moi5T1tXdWafc=
 github.com/kenorld/egret-core v0.0.0-20181115233952-048ff2d7cc4f h1:DwwfJohxImnsft/PCwnA9CgtRArIpqhDcKanJ3m6RGM=
