@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/agtorre/gocolorize"
+	"go.uber.org/zap"
 )
 
 // Command structure cribbed from the genius organization of the "go" command.
@@ -38,8 +39,12 @@ var commands = []*Command{
 	cmdTest,
 	cmdVersion,
 }
+var logger *zap.Logger
 
 func main() {
+	lg, _ := zap.NewDevelopment()
+	logger = lg
+	defer logger.Sync()
 	if runtime.GOOS == "windows" {
 		gocolorize.SetPlain(true)
 	}

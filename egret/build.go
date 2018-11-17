@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/kenorld/egret-cmd/harness"
-	"github.com/kenorld/egret-core"
+	egret "github.com/kenorld/egret-core"
 )
 
 var cmdBuild = &Command{
@@ -60,7 +60,7 @@ func buildApp(args []string) {
 	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), egret.BasePath, false, nil)
 	os.MkdirAll(destPath, 0777)
 
-	app, eerr := harness.Build()
+	app, eerr := harness.Build(logger)
 	panicOnError(eerr, "Failed to build")
 
 	// Included are:

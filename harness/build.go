@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/kenorld/egret-core"
 )
@@ -25,7 +25,7 @@ var importErrorPattern = regexp.MustCompile("cannot find package \"([^\"]+)\"")
 // 2. Run the appropriate "go build" command.
 // Requires that egret.Init has been called previously.
 // Returns the path to the built binary, and an error if there was a problem building it.
-func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
+func Build(logger *zap.Logger, buildFlags ...string) (app *App, compileError *egret.Error) {
 	if compileError != nil {
 		return nil, compileError
 	}
@@ -37,14 +37,12 @@ func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 	// It relies on the user having "go" installed.
 	goPath, err := exec.LookPath("go")
 	if err != nil {
-		logrus.Fatal("Go executable not found in PATH.")
+		logger.Fatal("Go executable not found in PATH")
 	}
 
 	pkg, err := build.Default.Import(egret.ImportPath, "", build.FindOnly)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"ImportPath": egret.ImportPath,
-		}).Fatal("Failure importing.")
+		logger.Warn("Failure importing", zap.String("import_path", egret.ImportPath))
 	}
 
 	// Binary path is a combination of $GOBIN/egret.d directory, app's import path and its name.
@@ -61,7 +59,7 @@ func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 
 	gotten := make(map[string]struct{})
 	for {
-		appVersion := getAppVersion()
+		appVersion := getAppVersion(logger)
 		buildTime := time.Now().UTC().Format(time.RFC3339)
 		versionLinkerFlags := fmt.Sprintf("-X %s/app.AppVersion=%s -X %s/app.BuildTime=%s",
 			egret.ImportPath, appVersion, egret.ImportPath, buildTime)
@@ -80,40 +78,40 @@ func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 		flags = append(flags, path.Join(egret.ImportPath))
 
 		buildCmd := exec.Command(goPath, flags...)
-		logrus.Info("Exec:", buildCmd.Args)
+		logger.Info("Exec command", zap.Strings("args", buildCmd.Args))
 		output, err := buildCmd.CombinedOutput()
 
 		// If the build succeeded, we're done.
 		if err == nil {
-			return NewApp(binName), nil
+			return NewApp(binName, logger), nil
 		}
-		logrus.Error(string(output))
+		logger.Error(string(output))
 
 		// See if it was an import error that we can go get.
 		matches := importErrorPattern.FindStringSubmatch(string(output))
 		if matches == nil {
-			return nil, newCompileError(output)
+			return nil, newCompileError(output, logger)
 		}
 
 		// Ensure we haven't already tried to go get it.
 		pkgName := matches[1]
 		if _, alreadyTried := gotten[pkgName]; alreadyTried {
-			return nil, newCompileError(output)
+			return nil, newCompileError(output, logger)
 		}
 		gotten[pkgName] = struct{}{}
 
 		// Execute "go get <pkg>"
 		getCmd := exec.Command(goPath, "get", pkgName)
-		logrus.Info("Exec:", getCmd.Args)
+		logger.Info("Exec command", zap.Strings("args", getCmd.Args))
 		getOutput, err := getCmd.CombinedOutput()
 		if err != nil {
-			logrus.Error(string(getOutput))
-			return nil, newCompileError(output)
+			logger.Error(string(getOutput))
+			return nil, newCompileError(output, logger)
 		}
 
 		// Success getting the import, attempt to build again.
 	}
-	logrus.Fatal("Not reachable")
+	logger.Fatal("Not reachable")
 	return nil, nil
 }
 
@@ -123,7 +121,7 @@ func Build(buildFlags ...string) (app *App, compileError *egret.Error) {
 //   variable
 // - Read the output of "git describe" if the source is in a git repository
 // If no version can be determined, an empty string is returned.
-func getAppVersion() string {
+func getAppVersion(logger *zap.Logger) string {
 	if version := os.Getenv("APP_VERSION"); version != "" {
 		return version
 	}
@@ -137,13 +135,11 @@ func getAppVersion() string {
 			return ""
 		}
 		gitCmd := exec.Command(gitPath, "--git-dir="+gitDir, "describe", "--always", "--dirty")
-		logrus.Info("Exec:", gitCmd.Args)
+		logger.Info("Exec command", zap.Strings("args", gitCmd.Args))
 		output, err := gitCmd.Output()
 
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"error": err,
-			}).Warn("Cannot determine git repository version.")
+			logger.Warn("Cannot determine git repository version", zap.Error(err))
 			return ""
 		}
 
@@ -164,16 +160,14 @@ func containsValue(m map[string]string, val string) bool {
 
 // Parse the output of the "go build" command.
 // Return a detailed Error.
-func newCompileError(output []byte) *egret.Error {
+func newCompileError(output []byte, logger *zap.Logger) *egret.Error {
 	errorMatch := regexp.MustCompile(`(?m)^([^:#]+):(\d+):(\d+:)? (.*)$`).
 		FindSubmatch(output)
 	if errorMatch == nil {
 		errorMatch = regexp.MustCompile(`(?m)^(.*?)\:(\d+)\:\s(.*?)$`).FindSubmatch(output)
 
 		if errorMatch == nil {
-			logrus.WithFields(logrus.Fields{
-				"error": string(output),
-			}).Error("Failed to parse build errors.")
+			logger.Error("Failed to parse build errors", zap.String("error", string(output)))
 			return &egret.Error{
 				Status:     500,
 				Name:       "compilation_error",
@@ -184,10 +178,7 @@ func newCompileError(output []byte) *egret.Error {
 		}
 
 		errorMatch = append(errorMatch, errorMatch[3])
-
-		logrus.WithFields(logrus.Fields{
-			"error": string(output),
-		}).Error("Build errors.")
+		logger.Error("Build failed", zap.String("error", string(output)))
 	}
 
 	// Read the source for the offending file.
@@ -215,9 +206,7 @@ func newCompileError(output []byte) *egret.Error {
 	fileStr, err := egret.ReadLines(absFilename)
 	if err != nil {
 		compileError.MetaError = absFilename + ": " + err.Error()
-		logrus.WithFields(logrus.Fields{
-			"error": compileError.MetaError,
-		}).Error("Build compile error.")
+		logger.Error("Build compile error", zap.String("file", absFilename), zap.Error(err))
 		return compileError
 	}
 

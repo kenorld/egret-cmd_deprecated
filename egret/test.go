@@ -9,10 +9,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/kenorld/egret-cmd/harness"
-	"github.com/kenorld/egret-core"
+	egret "github.com/kenorld/egret-core"
 )
 
 var cmdTest = &Command{
@@ -92,7 +92,7 @@ func testApp(args []string) {
 		errorf("Failed to create log file: %s", err)
 	}
 
-	app, reverr := harness.Build()
+	app, reverr := harness.Build(logger)
 	if reverr != nil {
 		errorf("Error building: %s", reverr)
 	}
@@ -105,9 +105,11 @@ func testApp(args []string) {
 		errorf("%s", err)
 	}
 	defer cmd.Kill()
-	logrus.WithFields(logrus.Fields{
-		"AppName": egret.AppName, "ImportPath": egret.ImportPath, "Mode": mode,
-	}).Info("Testing...")
+	logger.Info("Testing...",
+		zap.String("app_name", egret.AppName),
+		zap.String("import_path", egret.ImportPath),
+		zap.String("mode", mode),
+	)
 
 	// Get a list of tests.
 	// Since this is the first request to the server, retry/sleep a couple times

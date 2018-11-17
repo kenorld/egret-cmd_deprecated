@@ -23,7 +23,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/kenorld/egret-core"
 )
@@ -42,6 +42,7 @@ type Harness struct {
 	serverHost string
 	port       int
 	proxy      *httputil.ReverseProxy
+	logger     *zap.Logger
 }
 
 func renderError(w http.ResponseWriter, r *http.Request, err error) {
@@ -72,7 +73,7 @@ func (h *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Reverse proxy the request.
 	// (Need special code for websockets, courtesy of bradfitz)
 	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
-		proxyWebsocket(w, r, h.serverHost)
+		proxyWebsocket(w, r, h.serverHost, h.logger)
 	} else {
 		h.proxy.ServeHTTP(w, r)
 	}
@@ -80,7 +81,7 @@ func (h *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // NewHarness method returns a reverse proxy that forwards requests
 // to the given port.
-func NewHarness() *Harness {
+func NewHarness(logger *zap.Logger) *Harness {
 	// Get a template loader to render errors.
 	// Prefer the app's views/errors directory, and fall back to the stock error pages.
 	// egret.MainTemplateLoader = egret.NewTemplateLoader(
@@ -100,7 +101,7 @@ func NewHarness() *Harness {
 	}
 
 	if port == 0 {
-		port = getFreePort()
+		port = getFreePort(logger)
 	}
 
 	serverURL, _ := url.ParseRequestURI(fmt.Sprintf(scheme+"://%s:%d", addr, port))
@@ -109,6 +110,7 @@ func NewHarness() *Harness {
 		port:       port,
 		serverHost: serverURL.String()[len(scheme+"://"):],
 		proxy:      httputil.NewSingleHostReverseProxy(serverURL),
+		logger:     logger,
 	}
 
 	if egret.HttpTLSEnabled {
@@ -125,8 +127,8 @@ func (h *Harness) Refresh() (err *egret.Error) {
 		h.app.Kill()
 	}
 
-	logrus.Info("Rebuilding...")
-	h.app, err = Build()
+	h.logger.Info("Rebuilding...")
+	h.app, err = Build(h.logger)
 	if err != nil {
 		return
 	}
@@ -169,7 +171,7 @@ func (h *Harness) Run() {
 
 	go func() {
 		addr := fmt.Sprintf("%s:%d", egret.HttpAddr, egret.HttpPort)
-		logrus.Info("Listening on address: " + addr)
+		h.logger.Info("Listening on address: " + addr)
 
 		var err error
 		if egret.HttpTLSEnabled {
@@ -178,9 +180,7 @@ func (h *Harness) Run() {
 			err = http.ListenAndServe(addr, h)
 		}
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"error": err,
-			}).Fatal("Failed to start reverse proxy.")
+			h.logger.Fatal("Failed to start reverse proxy", zap.Error(err))
 		}
 	}()
 
@@ -195,27 +195,23 @@ func (h *Harness) Run() {
 }
 
 // Find an unused port
-func getFreePort() (port int) {
+func getFreePort(logger *zap.Logger) (port int) {
 	conn, err := net.Listen("tcp", ":0")
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Fatal("Get free port error.")
+		logger.Fatal("Get free port error", zap.Error(err))
 	}
 
 	port = conn.Addr().(*net.TCPAddr).Port
 	err = conn.Close()
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Fatal("Geg free port error.")
+		logger.Fatal("Get free port error", zap.Error(err))
 	}
 	return port
 }
 
 // proxyWebsocket copies data between websocket client and server until one side
 // closes the connection.  (ReverseProxy doesn't work with websocket requests.)
-func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
+func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string, logger *zap.Logger) {
 	var (
 		d   net.Conn
 		err error
@@ -230,10 +226,7 @@ func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
 	}
 	if err != nil {
 		http.Error(w, "Error contacting backend server.", 500)
-		logrus.WithFields(logrus.Fields{
-			"host":  host,
-			"error": err,
-		}).Error("Error dialing websocket backend.")
+		logger.Error("Error dialing websocket backend", zap.String("host", host), zap.Error(err))
 		return
 	}
 	hj, ok := w.(http.Hijacker)
@@ -243,9 +236,7 @@ func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
 	}
 	nc, _, err := hj.Hijack()
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Hijack error.")
+		logger.Error("Hijack error", zap.Error(err))
 		return
 	}
 	defer nc.Close()
@@ -253,9 +244,7 @@ func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
 
 	err = r.Write(d)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Error copying request to target.")
+		logger.Error("Error copying request to target", zap.Error(err))
 		return
 	}
 

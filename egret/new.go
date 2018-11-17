@@ -9,8 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -125,7 +123,7 @@ func initGoPaths() {
 	}
 
 	if len(srcRoot) == 0 {
-		log.Fatal("Abort: could not create a Egret application outside of GOPATH.")
+		logger.Fatal("Abort: could not create a Egret application outside of GOPATH.")
 	}
 
 	// set go src path

@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/kenorld/egret-cmd/harness"
-	"github.com/kenorld/egret-core"
-	"github.com/sirupsen/logrus"
+	egret "github.com/kenorld/egret-core"
+	"go.uber.org/zap"
 )
 
 var cmdRun = &Command{
@@ -56,20 +56,23 @@ func runApp(args []string) {
 		}
 	}
 
-	logrus.WithFields(logrus.Fields{
-		"AppName": egret.AppName, "ImportPath": egret.ImportPath, "Mode": mode, "BasePath": egret.BasePath,
-	}).Info("Running...")
+	logger.Info("Running...",
+		zap.String("app_name", egret.AppName),
+		zap.String("import_path", egret.ImportPath),
+		zap.String("mode", mode),
+		zap.String("base_path", egret.BasePath),
+	)
 
 	// If the app is run in "watched" mode, use the harness to run it.
 	if egret.Config.GetBoolDefault("watch.enabled", true) && egret.Config.GetBoolDefault("watch.code", true) {
-		logrus.Info("Running in watched mode.")
+		logger.Info("Running in watched mode.")
 		egret.HttpPort = port
-		harness.NewHarness().Run() // Never returns.
+		harness.NewHarness(logger).Run() // Never returns.
 	}
 
 	// Else, just build and run the app.
-	logrus.Info("Running in live build mode.")
-	app, err := harness.Build()
+	logger.Info("Running in live build mode.")
+	app, err := harness.Build(logger)
 	if err != nil {
 		errorf("Failed to build app: %s", err)
 	}
