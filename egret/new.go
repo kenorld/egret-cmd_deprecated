@@ -56,9 +56,6 @@ var (
 
 func newApp(args []string) {
 	// check for proper args by count
-	if len(args) == 0 {
-		errorf("No import path given.\nRun 'egret help new' for usage.\n")
-	}
 	if len(args) > 2 {
 		errorf("Too many arguments provided.\nRun 'egret help new' for usage.\n")
 	}

@@ -70,15 +70,15 @@ func main() {
 
 	// Commands use panic to abort execution when something goes wrong.
 	// Panics are logged at the point of error.  Ignore those.
-	defer func() {
-		if err := recover(); err != nil {
-			if _, ok := err.(LoggedError); !ok {
-				// This panic was not expected / logged.
-				panic(err)
-			}
-			os.Exit(1)
-		}
-	}()
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		if _, ok := err.(LoggedError); !ok {
+	// 			// This panic was not expected / logged.
+	// 			panic(err)
+	// 		}
+	// 		os.Exit(1)
+	// 	}
+	// }()
 	for _, cmd := range commands {
 		if cmd.Name() == args[0] {
 			cmd.Run(args[1:])

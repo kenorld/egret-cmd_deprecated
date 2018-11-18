@@ -48,7 +48,10 @@ func init() {
 func testApp(args []string) {
 	var err error
 	if len(args) == 0 {
-		errorf("No import path given.\nRun 'egret help test' for usage.\n")
+		args[0] = ""
+	}
+	if args[0] == "." || args[0] == "./" {
+		args[0] = ""
 	}
 
 	mode := "dev"

@@ -2,7 +2,6 @@ package harness
 
 import (
 	"fmt"
-	"go/build"
 	"os"
 	"os/exec"
 	"path"
@@ -40,13 +39,15 @@ func Build(logger *zap.Logger, buildFlags ...string) (app *App, compileError *eg
 		logger.Fatal("Go executable not found in PATH")
 	}
 
-	pkg, err := build.Default.Import(egret.ImportPath, "", build.FindOnly)
-	if err != nil {
-		logger.Warn("Failure importing", zap.String("import_path", egret.ImportPath))
-	}
+	// pkg, err := build.Default.Import(egret.ImportPath, "", build.FindOnly)
+	// if err != nil {
+	// 	logger.Warn("Failure importing", zap.String("import_path", egret.ImportPath))
+	// }
+	// // Binary path is a combination of $GOBIN/egret.d directory, app's import path and its name.
+	// binName := filepath.Join(pkg.BinDir, "egret.d", egret.ImportPath, filepath.Base(egret.BasePath))
 
-	// Binary path is a combination of $GOBIN/egret.d directory, app's import path and its name.
-	binName := filepath.Join(pkg.BinDir, "egret.d", egret.ImportPath, filepath.Base(egret.BasePath))
+	binPath := filepath.Join(os.Getenv("GOPATH"), "bin")
+	binName := filepath.Join(binPath, "egret.d", egret.ImportPath, filepath.Base(egret.BasePath))
 
 	// Change binary path for Windows build
 	goos := runtime.GOOS

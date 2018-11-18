@@ -34,7 +34,10 @@ func init() {
 
 func runApp(args []string) {
 	if len(args) == 0 {
-		errorf("No import path given.\nRun 'egret help run' for usage.\n")
+		args[0] = ""
+	}
+	if args[0] == "." || args[0] == "./" {
+		args[0] = ""
 	}
 
 	// Determine the run mode.
